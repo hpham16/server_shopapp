@@ -19,6 +19,45 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             "OR o.note LIKE %:keyword% " +
             "OR o.email LIKE %:keyword%)")
     Page<Order> findByKeyword(@Param("keyword") String keyword, Pageable pageable);
+
+    @Query("SELECT o FROM Order o WHERE MONTH(o.orderDate) = :month AND o.active = true")
+    Order ThongKeTheoThang(@Param("month") int month);
+
+    @Query("SELECT EXTRACT(MONTH FROM o.orderDate) as Thang, EXTRACT(YEAR FROM o.orderDate) as Nam, SUM(o.totalMoney) as TongDoanhThu, SUM(od.numberOfProducts) as TongSanPhamBanDuoc " +
+            "FROM Order o LEFT JOIN OrderDetail od ON o.id = od.order.id " +
+            "WHERE o.status = 'shipped' " +
+            "GROUP BY EXTRACT(MONTH FROM o.orderDate), EXTRACT(YEAR FROM o.orderDate)")
+    List<Object[]> thongKeDoanhThuTheoThang();
+
+    @Query("SELECT EXTRACT(MONTH FROM o.orderDate) as Thang, EXTRACT(YEAR FROM o.orderDate) as Nam, SUM(o.totalMoney) as TongDoanhThu, SUM(od.numberOfProducts) as TongSanPhamBanDuoc " +
+            "FROM Order o LEFT JOIN OrderDetail od ON o.id = od.order.id " +
+            "WHERE o.status = 'shipped' AND (:month IS NULL OR EXTRACT(MONTH FROM o.orderDate) = :month) " +
+            "GROUP BY EXTRACT(MONTH FROM o.orderDate), EXTRACT(YEAR FROM o.orderDate)")
+    List<Object[]> thongKeDoanhThuTheoThangCuaMotThang(@Param("month") Integer month);
+
+    @Query("SELECT p.name as productName, SUM(o.totalMoney) as totalRevenue, SUM(od.numberOfProducts) as totalQuantitySold " +
+            "FROM OrderDetail od JOIN od.product p JOIN od.order o " +
+            "WHERE o.status = 'shipped' " +
+            "GROUP BY p.name")
+    List<Object[]> thongKeDoanhThuTheoSanPham();
+
+    @Query("SELECT p.name as productName, SUM(o.totalMoney) as totalRevenue, SUM(od.numberOfProducts) as totalQuantitySold " +
+            "FROM OrderDetail od JOIN od.product p JOIN od.order o " +
+            "WHERE o.status = 'shipped' AND p.name ILIKE %:productName% " +
+            "GROUP BY p.name")
+    List<Object[]> thongKeDoanhThuTheoSanPhamCuaMotSanPham(@Param("productName") String productName);
+
+    @Query("SELECT c.name as categoryName, SUM(o.totalMoney) as totalRevenue, SUM(od.numberOfProducts) as totalQuantitySold " +
+            "FROM OrderDetail od JOIN od.product p JOIN p.category c JOIN od.order o " +
+            "WHERE o.status = 'shipped' " +
+            "GROUP BY c.name")
+    List<Object[]> thongKeDoanhThuTheoDanhMuc();
+
+    @Query("SELECT c.name as categoryName, SUM(o.totalMoney) as totalRevenue, SUM(od.numberOfProducts) as totalQuantitySold " +
+            "FROM OrderDetail od JOIN od.product p JOIN p.category c JOIN od.order o " +
+            "WHERE o.status = 'shipped' AND c.name ILIKE %:categoryName% " +
+            "GROUP BY c.name")
+    List<Object[]> thongKeDoanhThuTheoDanhMucCuaMotDanhMuc(@Param("categoryName") String categoryName);
 }
 /*
 INSERT INTO orders (user_id, fullname, email, phone_number, address, note, status, total_money)

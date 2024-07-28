@@ -15,4 +15,12 @@ public interface IOrderService {
     void deleteOrder(Long id);
     List<Order> findByUserId(Long userId);
     Page<Order> getOrdersByKeyword(String keyword, Pageable pageable);
+    Order ThongKeTheoThang(int month);
+
+    List<Object[]> thongKeDoanhThuTheoThang(Integer month);
+
+    List<Object[]> thongKeDoanhThuTheoSanPham(String productName);
+
+    List<Object[]> thongKeDoanhThuTheoDanhMuc(String categoryName);
+
 }

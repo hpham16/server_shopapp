@@ -1,9 +1,13 @@
 package com.project.shopapp.controllers;
 
 import com.project.shopapp.components.LocalizationUtils;
-import com.project.shopapp.dtos.*;
+import com.project.shopapp.dtos.OrderDTO;
+import com.project.shopapp.dtos.ThongKeDanhMucDTO;
+import com.project.shopapp.dtos.ThongKeSanPhamDTO;
+import com.project.shopapp.dtos.ThongKeThangDTO;
 import com.project.shopapp.models.Order;
-import com.project.shopapp.responses.*;
+import com.project.shopapp.responses.OrderListResponse;
+import com.project.shopapp.responses.OrderResponse;
 import com.project.shopapp.services.IOrderService;
 import com.project.shopapp.utils.MessageKeys;
 import jakarta.validation.Valid;
@@ -16,7 +20,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("${api.prefix}/orders")
@@ -110,5 +116,67 @@ public class OrderController {
                 .orders(orderResponses)
                 .totalPages(totalPages)
                 .build());
+    }
+
+
+
+    @GetMapping("/thong-ke-thang")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<List<ThongKeThangDTO>> getRevenueStatistics(@RequestParam(value = "month", required = false) Integer month) {
+        List<Object[]> result = orderService.thongKeDoanhThuTheoThang(month);
+
+        List<ThongKeThangDTO> dtoList = result.stream()
+                .map(this::convertToThongKeThangDTO)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(dtoList);
+    }
+
+    private ThongKeThangDTO convertToThongKeThangDTO(Object[] record) {
+        String monthStr = (record[0] != null) ? String.valueOf(((Number) record[0]).intValue()) : "N/A";
+        int year = (record[1] != null) ? ((Number) record[1]).intValue() : 0;
+        double totalMoney = (record[2] != null) ? ((Number) record[2]).doubleValue() : 0.0;
+        Integer numberOfProducts = (record.length > 3 && record[3] != null) ? ((Number) record[3]).intValue() : null;
+
+        return ThongKeThangDTO.builder()
+                .totalMoney(totalMoney)
+                .numberOfProducts(numberOfProducts)
+                .month(monthStr)
+                .year(year)
+                .build();
+    }
+
+    @GetMapping("/thong-ke-san-pham")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<?> thongKeTheoSanPham(@RequestParam(value = "productName", required = false) String productName) {
+        List<Object[]> result = orderService.thongKeDoanhThuTheoSanPham(productName);
+        List<ThongKeSanPhamDTO> dtoList = result.stream().map(record -> {
+            String productNames = (String) record[0];
+            double totalMoney = ((Number) record[1]).doubleValue();
+            Integer numberOfProducts = ((Number) record[2]).intValue();
+            return ThongKeSanPhamDTO.builder()
+                    .productName(productNames)
+                    .totalMoney(totalMoney)
+                    .numberOfProducts(numberOfProducts)
+                    .build();
+        }).collect(Collectors.toList());
+        return ResponseEntity.ok(dtoList);
+    }
+
+    @GetMapping("/thong-ke-danh-muc")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<?> thongKeTheoDanhMuc(@RequestParam(value = "categoryName", required = false) String categoryName) {
+        List<Object[]> result = orderService.thongKeDoanhThuTheoDanhMuc(categoryName);
+        List<ThongKeDanhMucDTO> dtoList = result.stream().map(record -> {
+            String categoryNames = (String) record[0];
+            double totalMoney = ((Number) record[1]).doubleValue();
+            Integer numberOfProducts = ((Number) record[2]).intValue();
+            return ThongKeDanhMucDTO.builder()
+                    .categoryName(categoryNames)
+                    .totalMoney(totalMoney)
+                    .numberOfProducts(numberOfProducts)
+                    .build();
+        }).collect(Collectors.toList());
+        return ResponseEntity.ok(dtoList);
     }
 }

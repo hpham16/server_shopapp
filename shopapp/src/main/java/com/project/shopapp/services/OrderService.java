@@ -1,9 +1,6 @@
 package com.project.shopapp.services;
 
-import com.project.shopapp.dtos.CartItemDTO;
-import com.project.shopapp.dtos.OrderDTO;
-import com.project.shopapp.dtos.OrderDetailDTO;
-import com.project.shopapp.dtos.OrderWithDetailsDTO;
+import com.project.shopapp.dtos.*;
 import com.project.shopapp.exceptions.DataNotFoundException;
 import com.project.shopapp.models.*;
 import com.project.shopapp.repositories.OrderDetailRepository;
@@ -152,5 +149,36 @@ public class OrderService implements IOrderService{
     @Override
     public Page<Order> getOrdersByKeyword(String keyword, Pageable pageable) {
         return orderRepository.findByKeyword(keyword, pageable);
+    }
+
+    @Override
+    public Order ThongKeTheoThang(int month) {
+        return orderRepository.ThongKeTheoThang(month);
+    }
+
+    @Override
+    public List<Object[]> thongKeDoanhThuTheoThang(Integer month) {
+        if (month != null) {
+            return orderRepository.thongKeDoanhThuTheoThangCuaMotThang(month);
+        } else {
+            return orderRepository.thongKeDoanhThuTheoThang();
+        }
+    }
+
+
+    public List<Object[]> thongKeDoanhThuTheoSanPham(String productName) {
+        if (productName != null && !productName.isEmpty()) {
+            return orderRepository.thongKeDoanhThuTheoSanPhamCuaMotSanPham(productName);
+        } else {
+            return orderRepository.thongKeDoanhThuTheoSanPham();
+        }
+    }
+
+    public List<Object[]> thongKeDoanhThuTheoDanhMuc(String categoryName) {
+        if (categoryName != null && !categoryName.isEmpty()) {
+            return orderRepository.thongKeDoanhThuTheoDanhMucCuaMotDanhMuc(categoryName);
+        } else {
+            return orderRepository.thongKeDoanhThuTheoDanhMuc();
+        }
     }
 }
